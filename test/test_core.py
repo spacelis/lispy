@@ -9,37 +9,48 @@ Description:
 
 """
 
-from lispy.core import execute, PlusOperator, LambdaOperator
+from lispy.core import execute
+from lispy.core import PlusOperator
+from lispy.core import LambdaOperator as L
+from lispy.core import symbolize
+
+
+def test_symbolize():
+    code = (PlusOperator(), '1', '2')
+    print symbolize(code)
 
 
 def test_op():
+    code = ((PlusOperator(), '1'), '2')
+    print execute(code)
+
+
+def test_op2():
     code = (PlusOperator(), '1', '2')
     print execute(code)
 
 
 def test_lambda():
-    code = (((LambdaOperator(), ('a', 'b'),
-              (PlusOperator(), 'a'), 'b'), '3'), '1')
+    code = ((LambdaOperator(), 'a', LambdaOperator(), 'b',
+             PlusOperator(), 'a', 'b'), '3', '1')
     print execute(code)
 
 
 def test_lambda_lambda():
-    code = (LambdaOperator(), ('add',), (('add', '1'), '2')), PlusOperator()
+    code = (LambdaOperator(), 'add', (('add', '1'), '2')), PlusOperator()
     print execute(code)
 
 
-def test_lambda_complex():
-    code = ((LambdaOperator(), ('code',),
-             ((LambdaOperator(), ('define',), 'code'),
-              (LambdaOperator(), ('n', 'b', 'c'),
-               (LambdaOperator(), ('n',), 'c'), 'b'))),
-            ('define', 'add',
-             (LambdaOperator(), ('a', 'b'), (PlusOperator(), 'a'), 'b'),
-             (('add', '1'), '2')))
+def test_lambda_lib():
+    lib = (L(), 'code', ((L(), '\\', L(), '+', 'code'), L(), PlusOperator()))
+    code = (lib, (('\\', 'a', '\\', 'b', '+', 'a', 'b'), '1', '2'))
     print execute(code)
 
 
 if __name__ == '__main__':
-    #test_lambda_lambda()
-    test_lambda_complex()
+    #test_symbolize()
+    #test_op()
+    #test_op2()
     #test_lambda()
+    #test_lambda_lambda()
+    test_lambda_lib()

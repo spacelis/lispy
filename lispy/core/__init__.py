@@ -9,12 +9,27 @@ GitHub: http://github.com/spacelis
 Description:
 
     This package is the core package of the python implementation
-    of LISP. The following concepts are formalized. Everything is
-    a function which means they can be APPLY_TO a list (an empty
-    one or not). Symbols and SymbolLists are functions taking no
-    arguments. LambdaOperator is indeed an operator for constructing
-    a LambdaFunction. LambdaFunctions are the real function could and
-    should be applied on later lists.
+    of LISP. The following concepts are formalized.
+
+    Everything is a function which means they can be APPLY_TO a list
+    (an empty one or not). Symbols are basic stuctures for both code
+    and data. LambdaOperator is indeed an operator for constructing a
+    LambdaFunction from a list of code (SymbolList). LambdaFunctions are
+    the constructed function could and should be applied on later lists.
+
+    Following are the theroms.
+
+    Nil(_) -> Nil
+    x::xs(ys) -> x(xs)(ys)
+
+    {lambda x: xs}(y::ys) -> {x->y}(xs)(ys)
+    {lambda x: xs}(Nil) -> {lambda x: xs}
+
+    op(x::xs) -> op(x)(xs)
+    op(Nil) -> ERROR
+
+    L(x::xs) -> {lambda x: xs}
+    L(Nil) -> ERROR
 
 """
 
@@ -24,26 +39,7 @@ class Function(object):  # pylint: disable-msg=R0903
     """ Function is the root entity of everything."""
 
     def apply_to(self, xs):
-        """ A general method to apply a function.
-
-        This will insure when function evaluated with no argument
-        will give back it self.
-
-        """
-        if xs.isEmpty():
-            return self
-        else:
-            return self.apply_to_one(xs)
-
-    def apply_to_one(self, xs):
-        """ The abstract method that need to be override in subclasses.
-
-        Functions have the ability to be applied to some value. Hence,
-        in lispy, that is usually a SymbolList.
-
-        :returns: A new Funtion type (Symbol or SymbolList usually)
-
-        """
+        """ A general method to apply a function. """
         raise NotImplementedError
 
     def __repr__(self):
@@ -52,10 +48,10 @@ class Function(object):  # pylint: disable-msg=R0903
         :returns: a string representation
 
         """
-        return "%s (%s)" % (self.__class__.__name__, self.__str__())
+        return self.__str__()
 
 
-class Symbol(Function):
+class Symbol(Function):  # pylint: disable-msg=W0223
 
     """ Symbol is the basic entity that wrapping values as a function.
 
@@ -63,17 +59,6 @@ class Symbol(Function):
     is a non-args function which always returning it self.
 
     """
-
-    def __init__(self, literate=None):
-        self._literate = literate
-
-    def getLiterate(self):
-        """ Return the literate value of this symbol.
-
-        :returns: self._literate
-
-        """
-        return self._literate
 
     def replace(self, k, v):
         """ Replacing self for another Symbol.
@@ -98,13 +83,48 @@ class Symbol(Function):
         """
         return repr(self) == repr(o)
 
-    def __str__(self):
-        """ Symbol( x ).
 
-        :returns: Symbol Name as Symbol( x )
+class SymbolAtom(Symbol):
+
+    """ Symbol is the basic entity that wrapping values as a function.
+
+    self._literate is the boxing value of a symbol. Whent the symbol
+    is a non-args function which always returning it self.
+
+    """
+
+    def __init__(self, literate=None):
+        self._literate = literate
+
+    def getLiterate(self):
+        """ Return the literate value of this symbol.
+
+        :returns: self._literate
 
         """
-        return str(self._literate)
+        return self._literate
+
+    def apply_to(self, xs):
+        """ Leave undefined.
+
+        :xs: @todo
+        :returns: @todo
+
+        """
+        if isinstance(xs, NilSymbolList):
+            return self
+        raise NotImplementedError
+
+    def __str__(self):
+        """ Representation of SymbolAtom.
+
+        :returns: Symbol Name as 'x or number itself
+
+        """
+        if isinstance(self._literate, str):
+            return "'" + str(self._literate)
+        else:
+            return str(self._literate)
 
 
 class SymbolList(Symbol):
@@ -117,17 +137,18 @@ class SymbolList(Symbol):
 
     """
 
-    def __init__(self, xs=()):
+    def __init__(self, head, tail):
         """ Constructing a SymbolList for a literate list().
 
-        :xs: A list() of Symbols.
+        :head: A symbol as the first element.
+        :tail: A list of symbol as the rest of list.
 
         """
-        super(SymbolList, self).__init__(xs)
+        super(SymbolList, self).__init__()
+        self._head = head
+        self._tail = tail
 
     def apply_to(self, xs):
-        if self.isAtom():
-            return self.head().apply_to(NilSymbolList).apply_to(xs)
         return self.head().apply_to(self.tail()).apply_to(xs)
 
     def head(self):
@@ -136,7 +157,7 @@ class SymbolList(Symbol):
         :returns: The first element
 
         """
-        return self._literate[0]
+        return self._head
 
     def tail(self):
         """ Return the tail of SymbolList.
@@ -144,7 +165,7 @@ class SymbolList(Symbol):
         :returns: A new SymbolList with all elements but first.
 
         """
-        return SymbolList(self._literate[1:])
+        return self._tail
 
     def replace(self, k, v):
         """ Replace all occurance of k in the list with v.
@@ -154,23 +175,8 @@ class SymbolList(Symbol):
         :returns: A new SymbolList with replacements
 
         """
-        return SymbolList([s.replace(k, v) for s in self._literate])
-
-    def isEmpty(self):
-        """ True when SymbolList contains no element.
-
-        :returns: Whether this SymbolList is empty
-
-        """
-        return len(self._literate) == 0
-
-    def isAtom(self):
-        """ True when SymbolList contains only one element.
-
-        :returns: Whether this SymbolList is atom
-
-        """
-        return len(self._literate) == 1
+        return SymbolList(self._head.replace(k, v),
+                          self._tail.replace(k, v))
 
     def __str__(self):
         """ The string representation of SymbolList.
@@ -178,11 +184,33 @@ class SymbolList(Symbol):
         :returns: A string
 
         """
-        return '[%s]' % (', '.join([str(x) for x in self._literate]), )
+        return '[%s, %s]' % (str(self._head), str(self._tail))
 
 
 # The empty SymbolList as a helper object.
-NilSymbolList = SymbolList()
+class NilSymbolList(Symbol):  # pylint: disable-msg=R0903
+
+    """ A symbol list contains nothing. """
+
+    def __init__(self):
+        """ Constructing a SymbolList for a literate list(). """
+        super(NilSymbolList, self).__init__()
+
+    def apply_to(self, xs):
+        """ Return self as a NilSymbolList. """
+        return self
+
+    def replace(self, k, v):
+        """ Return self as no elements will be replaced. """
+        return self
+
+    def __str__(self):
+        """ Representation of NilSymbolList.
+
+        :returns: NilSymbolList
+
+        """
+        return '[NIL]'
 
 
 class AddXOperator(Symbol):  # pylint: disable-msg=R0903
@@ -193,14 +221,16 @@ class AddXOperator(Symbol):  # pylint: disable-msg=R0903
         super(AddXOperator, self).__init__()
         self._X = x
 
-    def apply_to_one(self, xs):
+    def apply_to(self, xs):
         """ Add held with to the evaluation of the rest.
 
         :returns: The added value.
 
         """
-        return Symbol(self._X.getLiterate() +
-                      xs.apply_to(NilSymbolList).getLiterate())
+        if isinstance(xs, NilSymbolList):
+            return self
+        return SymbolAtom(self._X.apply_to(NilSymbolList()).getLiterate() +
+                          xs.apply_to(NilSymbolList()).getLiterate())
 
     def __str__(self):
         """ Representation of AddX.
@@ -208,7 +238,7 @@ class AddXOperator(Symbol):  # pylint: disable-msg=R0903
         :returns: A string
 
         """
-        return 'F_[Add_%s]' % (str(self._X), )
+        return '<Add_%s>' % (str(self._X), )
 
 
 class PlusOperator(Symbol):  # pylint: disable-msg=R0903
@@ -222,13 +252,15 @@ class PlusOperator(Symbol):  # pylint: disable-msg=R0903
     def __init__(self):
         super(PlusOperator, self).__init__()
 
-    def apply_to_one(self, xs):
+    def apply_to(self, xs):
         """ Return a new function that the held value to an argument.
 
         :returns: A function lambda a: x + a
 
         """
-        return AddXOperator(xs.apply_to(NilSymbolList))
+        if isinstance(xs, NilSymbolList):
+            raise ValueError('<+> requires a parameter')
+        return AddXOperator(xs.head()).apply_to(xs.tail())
 
     def __str__(self):
         """ Representation of plus operator.
@@ -236,7 +268,7 @@ class PlusOperator(Symbol):  # pylint: disable-msg=R0903
         :returns: A string
 
         """
-        return 'F<+>'
+        return '<+>'
 
 
 #class OpCar(Function):
@@ -275,12 +307,9 @@ class LambdaFunction(Symbol):  # pylint: disable-msg=R0903
         Otherwise evaluates to the value.
 
         """
-        if self._para.isEmpty():
-            return self._body.apply_to(NilSymbolList)
-        else:
-            var = self._para.head().apply_to(NilSymbolList)
-            nb = self._body.replace(var, xs.apply_to(NilSymbolList))
-            return LambdaFunction(self._para.tail(), nb)
+        if isinstance(xs, NilSymbolList):
+            return self
+        return self._body.replace(self._para, xs.head()).apply_to(xs.tail())
 
     def __str__(self):
         """ Representation of LambdaFunction.
@@ -288,7 +317,7 @@ class LambdaFunction(Symbol):  # pylint: disable-msg=R0903
         :returns: A string.
 
         """
-        return 'L %s: %s' % (self._para, self._body)
+        return '(%s -> %s)' % (self._para, self._body)
 
 
 class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
@@ -310,6 +339,8 @@ class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
         the tail of which is going to be the body of the function
 
         """
+        if isinstance(xs, NilSymbolList):
+            raise ValueError('LambdaOperator requires a parameter.')
         return LambdaFunction(xs.head(), xs.tail())
 
     def __str__(self):
@@ -318,7 +349,7 @@ class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
         :returns: A string.
 
         """
-        return 'lambda'
+        return '<lambda>'
 
 
 #class DefineOperator(Function):
@@ -334,18 +365,20 @@ def symbolize(source):
     :returns: A symbol list
 
     """
-    code = list()
-    for x in source:
+    if len(source) > 0:
+        x = source[0]
         if isinstance(x, str):
             try:
-                code.append(Symbol(int(x)))
+                x = int(x)
             except ValueError:
-                code.append(Symbol(x))
+                pass
+            return SymbolList(SymbolAtom(x), symbolize(source[1:]))
         elif isinstance(x, tuple):
-            code.append(symbolize(x))
+            return SymbolList(symbolize(x), symbolize(source[1:]))
         else:
-            code.append(x)
-    return SymbolList(tuple(x for x in code))
+            return SymbolList(x, symbolize(source[1:]))
+    else:
+        return NilSymbolList()
 
 
 def execute(source):
@@ -354,4 +387,4 @@ def execute(source):
     :source: The unsymbolized source code to run.
 
     """
-    return symbolize(source).apply_to(NilSymbolList)
+    return symbolize(source).apply_to(NilSymbolList())
