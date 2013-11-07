@@ -291,7 +291,7 @@ class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
     #pass
 
 
-class PlusOperator(Symbol):  # pylint: disable-msg=R0903
+class BinaryOperator(Symbol):  # pylint: disable-msg=R0903
 
     """ Mathimetical plus operator for numbers.
 
@@ -300,9 +300,10 @@ class PlusOperator(Symbol):  # pylint: disable-msg=R0903
     """
 
     def __init__(self, x=None, y=None):
-        super(PlusOperator, self).__init__()
+        super(BinaryOperator, self).__init__()
         self._x = x
         self._y = y
+        self._op = None
 
     def apply_to(self, xs):
         """ Return a new function that the held value to an argument.
@@ -310,8 +311,18 @@ class PlusOperator(Symbol):  # pylint: disable-msg=R0903
         :returns: A function lambda a: x + a
 
         """
-        return SymbolAtom(self._x.getLiterate() + self._y.getLiterate())\
-            .apply_to(xs)
+        return SymbolAtom(self.op(self._x.getLiterate(),
+                                  self._y.getLiterate())).apply_to(xs)
+
+    def op(self, x, y):
+        """ The abstract method for doing the operation
+
+        :x: Left Oprand
+        :y: Right Oprand
+        :returns: x op y
+
+        """
+        raise NotImplementedError
 
     def replace(self, k, v):
         """ Add oprand to this operator.
@@ -334,8 +345,88 @@ class PlusOperator(Symbol):  # pylint: disable-msg=R0903
         :returns: A string
 
         """
-        return '<+%s>' % \
-            (' '.join((str(i) for i in [self._x, self._y] if i)), )
+        return '<%s%s>' % \
+            (self._op, ' '.join((str(i) for i in [self._x, self._y] if i)), )
+
+
+class PlusOperator(BinaryOperator):
+
+    """ Plus. """
+
+    def __init__(self, x=None, y=None):
+        """@todo: to be defined1. """
+        super(PlusOperator, self).__init__(x, y)
+        self._op = '+'
+
+    def op(self, x, y):
+        """ Add the two numbers
+
+        :x: Left oprand.
+        :y: Right oprand.
+        :returns: @todo
+
+        """
+        return x + y
+
+
+class SubtractOperator(BinaryOperator):
+
+    """ Multiplication. """
+
+    def __init__(self, x=None, y=None):
+        """@todo: to be defined1. """
+        super(SubtractOperator, self).__init__(x, y)
+        self._op = '-'
+
+    def op(self, x, y):
+        """ Add the two numbers
+
+        :x: Left oprand.
+        :y: Right oprand.
+        :returns: @todo
+
+        """
+        return x - y
+
+
+class MultiplyOperator(BinaryOperator):
+
+    """ Multiplication. """
+
+    def __init__(self, x=None, y=None):
+        """@todo: to be defined1. """
+        super(MultiplyOperator, self).__init__(x, y)
+        self._op = '*'
+
+    def op(self, x, y):
+        """ Add the two numbers
+
+        :x: Left oprand.
+        :y: Right oprand.
+        :returns: @todo
+
+        """
+        return x * y
+
+
+class DivideOperator(BinaryOperator):
+
+    """ Multiplication. """
+
+    def __init__(self, x=None, y=None):
+        """@todo: to be defined1. """
+        super(DivideOperator, self).__init__(x, y)
+        self._op = '/'
+
+    def op(self, x, y):
+        """ Add the two numbers
+
+        :x: Left oprand.
+        :y: Right oprand.
+        :returns: @todo
+
+        """
+        return x / y
 
 
 #class OpCar(Function):

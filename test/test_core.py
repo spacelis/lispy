@@ -12,6 +12,9 @@ Description:
 
 from lispy.core import execute
 from lispy.core import PlusOperator
+from lispy.core import SubtractOperator
+from lispy.core import MultiplyOperator
+from lispy.core import DivideOperator
 from lispy.core import LambdaOperator as L
 from lispy.core import symbolize
 import unittest
@@ -35,12 +38,33 @@ class TestCore(unittest.TestCase):  # pylint: disable-msg=R0904
             execute(code).getLiterate(),  # pylint: disable-msg=E1103
             'z')
 
-    def test_op(self):
-        """ test_op. """
-        code = (L(), 'x', L(), 'y', PlusOperator()), '1', '2'
+    def test_plus(self):
+        """ test_plux. """
+        code = (L(), 'x', L(), 'y', PlusOperator()), '2', '3'
         self.assertEqual(
             execute(code).getLiterate(),  # pylint: disable-msg=E1103
-            3)
+            5)
+
+    def test_subtract(self):
+        """ test_subtract. """
+        code = (L(), 'x', L(), 'y', SubtractOperator()), '7', '3'
+        self.assertEqual(
+            execute(code).getLiterate(),  # pylint: disable-msg=E1103
+            4)
+
+    def test_mul(self):
+        """ test_mul. """
+        code = (L(), 'x', L(), 'y', MultiplyOperator()), '3', '2'
+        self.assertEqual(
+            execute(code).getLiterate(),  # pylint: disable-msg=E1103
+            6)
+
+    def test_divide(self):
+        """ test_op. """
+        code = (L(), 'x', L(), 'y', DivideOperator()), '242', '11'
+        self.assertEqual(
+            execute(code).getLiterate(),  # pylint: disable-msg=E1103
+            22)
 
     def test_lambda_lambda(self):
         """ test_lambda_lambda. """
