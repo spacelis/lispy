@@ -184,7 +184,7 @@ class SymbolList(Symbol):
         :returns: A string
 
         """
-        return '[%s, %s]' % (str(self._head), str(self._tail))
+        return '[%s, %s]' % (str(self._head), str(self._tail)[1:-1])
 
 
 # The empty SymbolList as a helper object.
@@ -211,72 +211,6 @@ class NilSymbolList(Symbol):  # pylint: disable-msg=R0903
 
         """
         return '[NIL]'
-
-
-class AddXOperator(Symbol):  # pylint: disable-msg=R0903
-
-    """Docstring for UniPlus. """
-
-    def __init__(self, x):
-        super(AddXOperator, self).__init__()
-        self._X = x
-
-    def apply_to(self, xs):
-        """ Add held with to the evaluation of the rest.
-
-        :returns: The added value.
-
-        """
-        if isinstance(xs, NilSymbolList):
-            return self
-        return SymbolAtom(self._X.apply_to(NilSymbolList()).getLiterate() +
-                          xs.apply_to(NilSymbolList()).getLiterate())
-
-    def __str__(self):
-        """ Representation of AddX.
-
-        :returns: A string
-
-        """
-        return '<Add_%s>' % (str(self._X), )
-
-
-class PlusOperator(Symbol):  # pylint: disable-msg=R0903
-
-    """ Mathimetical plus operator for numbers.
-
-    This is a built-in functions to add up numbers.
-
-    """
-
-    def __init__(self):
-        super(PlusOperator, self).__init__()
-
-    def apply_to(self, xs):
-        """ Return a new function that the held value to an argument.
-
-        :returns: A function lambda a: x + a
-
-        """
-        if isinstance(xs, NilSymbolList):
-            raise ValueError('<+> requires a parameter')
-        return AddXOperator(xs.head()).apply_to(xs.tail())
-
-    def __str__(self):
-        """ Representation of plus operator.
-
-        :returns: A string
-
-        """
-        return '<+>'
-
-
-#class OpCar(Function):
-    #pass
-
-
-#class OpCdr(Function):
-    #pass
 
 
 class LambdaFunction(Symbol):  # pylint: disable-msg=R0903
@@ -354,6 +288,61 @@ class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
 
 #class DefineOperator(Function):
     #""" define x y * = (lambda x: *) y"""
+    #pass
+
+
+class PlusOperator(Symbol):  # pylint: disable-msg=R0903
+
+    """ Mathimetical plus operator for numbers.
+
+    This is a built-in functions to add up numbers.
+
+    """
+
+    def __init__(self, x=None, y=None):
+        super(PlusOperator, self).__init__()
+        self._x = x
+        self._y = y
+
+    def apply_to(self, xs):
+        """ Return a new function that the held value to an argument.
+
+        :returns: A function lambda a: x + a
+
+        """
+        return SymbolAtom(self._x.getLiterate() + self._y.getLiterate())\
+            .apply_to(xs)
+
+    def replace(self, k, v):
+        """ Add oprand to this operator.
+
+        :k: Not used.
+        :v: The oprand to this operator.
+        :returns: a replace/original Operator function
+
+        """
+        if k == SymbolAtom('x'):
+            return self.__class__(v, self._y)
+        elif k == SymbolAtom('y'):
+            return self.__class__(self._x, v)
+        else:
+            return self
+
+    def __str__(self):
+        """ Representation of plus operator.
+
+        :returns: A string
+
+        """
+        return '<+%s>' % \
+            (' '.join((str(i) for i in [self._x, self._y] if i)), )
+
+
+#class OpCar(Function):
+    #pass
+
+
+#class OpCdr(Function):
     #pass
 
 
