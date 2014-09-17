@@ -286,11 +286,6 @@ class LambdaOperator(Symbol):  # pylint: disable-msg=R0903
         return '<lambda>'
 
 
-#class DefineOperator(Function):
-    #""" define x y * = (lambda x: *) y"""
-    #pass
-
-
 class BinaryOperator(Symbol):  # pylint: disable-msg=R0903
 
     """ Mathimetical plus operator for numbers.
@@ -429,12 +424,47 @@ class DivideOperator(BinaryOperator):
         return x / y
 
 
-#class OpCar(Function):
-    #pass
+class CarOperator(Symbol):
+
+    """ car return the head of a list. """
+
+    def __init__(self):
+        """ __init__
+        :returns: @todo
+
+        """
+        super(CarOperator, self).__init__()
+
+    def apply_to(self, xs):
+        """ Return the head of the list
+
+        :xs: A given SymbolList
+        :returns: @todo
+
+        """
+        return xs.head()
 
 
-#class OpCdr(Function):
-    #pass
+# TODO add quote sematics for car cdr cons operators
+class CdrOperator(Symbol):
+
+    """ cdr return the head of a list. """
+
+    def __init__(self):
+        """ __init__
+        :returns: @todo
+
+        """
+        super(CdrOperator, self).__init__()
+
+    def apply_to(self, xs):
+        """ Return the tail of the list
+
+        :xs: A given SymbolList
+        :returns: @todo
+
+        """
+        return xs.tail()
 
 
 # TODO make lispy version

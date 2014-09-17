@@ -15,6 +15,8 @@ from lispy.core import PlusOperator
 from lispy.core import SubtractOperator
 from lispy.core import MultiplyOperator
 from lispy.core import DivideOperator
+from lispy.core import CarOperator
+from lispy.core import CdrOperator
 from lispy.core import LambdaOperator as L
 from lispy.core import symbolize
 import unittest
@@ -65,6 +67,20 @@ class TestCore(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEqual(
             execute(code).getLiterate(),  # pylint: disable-msg=E1103
             22)
+
+    def test_car(self):
+        """ test car. """
+        code = CarOperator(), 'x', 'y', 'z'
+        self.assertEqual(
+            str(execute(code)),
+            "'x")
+
+    def test_cdr(self):
+        """ test cdr. """
+        code = CdrOperator(), 'x', 'y', 'z'
+        self.assertEqual(
+            str(execute(code)),
+            "['y, 'z, NIL]")
 
     def test_lambda_lambda(self):
         """ test_lambda_lambda. """
